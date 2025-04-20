@@ -1,0 +1,136 @@
+{{ define "admin_dashboard.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }} - Uber Trip Calculator</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Uber Trip Calculator</div>
+            <ul>
+                <li><a href="/dashboard">User Dashboard</a></li>
+                <li><a href="/admin" class="active">Admin</a></li>
+                <li><a href="/admin/users">Users</a></li>
+                <li><a href="/admin/logs">Audit Logs</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>Admin Dashboard</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                    <h3>Total Users</h3>
+                    <p class="stat-value">{{ .userStats.totalUsers }}</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-user-plus"></i></div>
+                <div class="stat-info">
+                    <h3>New Users (7 days)</h3>
+                    <p class="stat-value">{{ .userStats.newUsers }}</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-car"></i></div>
+                <div class="stat-info">
+                    <h3>Total Trips</h3>
+                    <p class="stat-value">{{ .tripStats.totalTrips }}</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-info">
+                    <h3>Avg Trip Cost</h3>
+                    <p class="stat-value">${{ printf "%.2f" .tripStats.avgCost }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-visualizations">
+            <div class="chart-container">
+                <h2>Monthly Trips</h2>
+                <canvas id="monthlyTripsChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h2>User Statistics</h2>
+                <canvas id="userStatsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <a href="/admin/users" class="btn">Manage Users</a>
+                <a href="/admin/logs" class="btn">View Audit Logs</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Uber Trip Calculator</p>
+    </footer>
+
+    <script>
+        // Monthly Trips Chart
+        const monthlyTripsLabels = Object.keys({{ .tripStats.monthlyTrips }});
+        const monthlyTripsData = Object.values({{ .tripStats.monthlyTrips }});
+        
+        new Chart(document.getElementById('monthlyTripsChart'), {
+            type: 'bar',
+            data: {
+                labels: monthlyTripsLabels,
+                datasets: [{
+                    label: 'Number of Trips',
+                    data: monthlyTripsData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // User Stats Chart
+        new Chart(document.getElementById('userStatsChart'), {
+            type: 'pie',
+            data: {
+                labels: ['OAuth Users', 'Other Users'],
+                datasets: [{
+                    data: [{{ .userStats.oauthUsers }}, {{ .userStats.totalUsers }} - {{ .userStats.oauthUsers }}],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>
+{{ end }}

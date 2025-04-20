@@ -1,0 +1,174 @@
+{{ define "admin_users.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }} - Uber Trip Calculator</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Uber Trip Calculator</div>
+            <ul>
+                <li><a href="/dashboard">User Dashboard</a></li>
+                <li><a href="/admin">Admin</a></li>
+                <li><a href="/admin/users" class="active">Users</a></li>
+                <li><a href="/admin/logs">Audit Logs</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>User Management</h1>
+        
+        <div class="search-filter">
+            <input type="text" id="searchInput" placeholder="Search users..." class="form-control">
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Registered</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .users }}
+                    <tr data-user-id="{{ .ID }}">
+                        <td>{{ .ID }}</td>
+                        <td>{{ .Username }}</td>
+                        <td>{{ .Email }}</td>
+                        <td>{{ .CreatedAt }}</td>
+                        <td>
+                            <select class="role-select" data-user-id="{{ .ID }}">
+                                <option value="user" {{ if eq .Role "user" }}selected{{ end }}>User</option>
+                                <option value="admin" {{ if eq .Role "admin" }}selected{{ end }}>Admin</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-danger delete-user" data-user-id="{{ .ID }}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination">
+            {{ if gt .currentPage 1 }}
+                <a href="/admin/users?page={{ subtract .currentPage 1 }}" class="btn">&laquo; Previous</a>
+            {{ end }}
+            
+            <span>Page {{ .currentPage }} of {{ .totalPages }}</span>
+            
+            {{ if lt .currentPage .totalPages }}
+                <a href="/admin/users?page={{ add .currentPage 1 }}" class="btn">Next &raquo;</a>
+            {{ end }}
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Uber Trip Calculator</p>
+    </footer>
+
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Deletion</h2>
+            <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn btn-danger">Delete</button>
+                <button id="cancelDelete" class="btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle role changes
+        document.querySelectorAll('.role-select').forEach(select => {
+            select.addEventListener('change', async function() {
+                const userId = this.getAttribute('data-user-id');
+                const newRole = this.value;
+                
+                try {
+                    const response = await fetch(`/admin/users/${userId}/role`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `role=${newRole}`
+                    });
+                    
+                    if (!response.ok) {
+                        const error = await response.json();
+                        alert(`Error: ${error.error}`);
+                    }
+                } catch (error) {
+                    alert(`Error: ${error.message}`);
+                }
+            });
+        });
+        
+        // Handle user deletion
+        let userToDelete = null;
+        const modal = document.getElementById('confirmModal');
+        
+        document.querySelectorAll('.delete-user').forEach(button => {
+            button.addEventListener('click', function() {
+                userToDelete = this.getAttribute('data-user-id');
+                modal.style.display = 'block';
+            });
+        });
+        
+        document.getElementById('cancelDelete').addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+        
+        document.getElementById('confirmDelete').addEventListener('click', async function() {
+            if (!userToDelete) return;
+            
+            try {
+                const response = await fetch(`/admin/users/${userToDelete}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    document.querySelector(`tr[data-user-id="${userToDelete}"]`).remove();
+                    modal.style.display = 'none';
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        });
+        
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const username = row.cells[1].textContent.toLowerCase();
+                const email = row.cells[2].textContent.toLowerCase();
+                
+                if (username.includes(searchValue) || email.includes(searchValue)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{ end }}

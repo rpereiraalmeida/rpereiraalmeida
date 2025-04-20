@@ -1,0 +1,92 @@
+{{ define "admin_logs.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }} - Uber Trip Calculator</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">Uber Trip Calculator</div>
+            <ul>
+                <li><a href="/dashboard">User Dashboard</a></li>
+                <li><a href="/admin">Admin</a></li>
+                <li><a href="/admin/users">Users</a></li>
+                <li><a href="/admin/logs" class="active">Audit Logs</a></li>
+                <li><a href="/logout">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <h1>System Audit Logs</h1>
+        
+        <div class="filter-options">
+            <div class="form-group">
+                <label for="actionFilter">Filter by Action:</label>
+                <select id="actionFilter" class="form-control">
+                    <option value="">All Actions</option>
+                    <option value="login">Login</option>
+                    <option value="logout">Logout</option>
+                    <option value="register">Register</option>
+                    <option value="password_reset">Password Reset</option>
+                    <option value="update_user_role">Update Role</option>
+                    <option value="delete_user">Delete User</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User ID</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .logs }}
+                    <tr data-action="{{ .Action }}">
+                        <td>{{ .CreatedAt }}</td>
+                        <td>{{ .UserID }}</td>
+                        <td>{{ .Action }}</td>
+                        <td>{{ .Details }}</td>
+                        <td>{{ .IPAddress }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Uber Trip Calculator</p>
+    </footer>
+
+    <script>
+        // Filter logs by action
+        document.getElementById('actionFilter').addEventListener('change', function() {
+            const action = this.value;
+            
+            document.querySelectorAll('tbody tr').forEach(row => {
+                if (!action || row.getAttribute('data-action') === action) {
+                    row.style.display = '';
+                } else {
+                    row.style  {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+{{ end }}
